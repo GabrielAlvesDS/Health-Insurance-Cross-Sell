@@ -45,9 +45,10 @@ Auxiliar o time de vendas a focar os esforços na captação de novos clientes p
 
 ![Annual_Premium](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/annual_premium.png)
 
+- Histogramas revelaram semelhanças marcantes entre ambos os casos, destacando uma alta concentração em um valor específico (2630), que provavelmente representa um valor mínimo. Após remover os outliers, ambas as distribuições se aproximaram de uma normal.
+
 <br>
 
-- Histogramas revelaram semelhanças marcantes entre ambos os casos, destacando uma alta concentração em um valor específico (2630), que provavelmente representa um valor mínimo. Após remover os outliers, ambas as distribuições se aproximaram de uma normal.
 ![Annual_Premium_2](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/annual_premium_2.png)
 
 ### Carteira de Motorista (Driving License):
@@ -74,7 +75,7 @@ Auxiliar o time de vendas a focar os esforços na captação de novos clientes p
 
 ### Idade do veículo (Vehicle Age):
 - Já para a idade do veículo identificamos que quanto mais antigo o veículo, maior é a parcela dos clientes querendo contratar o novo serviço
-- 
+
 ![vehicle_age](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/vehicle_age.png)
 
 ### Tempo Desde a Primeira Interação (Vintage):
@@ -83,14 +84,11 @@ Auxiliar o time de vendas a focar os esforços na captação de novos clientes p
 ![Vintage](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/vintage.png)
 
 ## Matriz de correlação:
-
-![Matriz_correlacao](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/correlation_matrix.png)
-
 - Veículo Danificado (Vehicle Damage): Correlação positiva significativa com o interesse no novo seguro. Clientes com veículos danificados têm maior probabilidade de expressar interesse.
 - Seguro Anterior (Previously Insured): Correlação negativa notável. Clientes que já possuíam seguro anteriormente têm menor propensão a manifestar interesse no novo seguro residencial.
 - Idade (Age): Correlação positiva leve. Indica que clientes ligeiramente mais jovens podem ter uma tendência sutilmente maior de demonstrar interesse.
 
-<br> 
+![Matriz_correlacao](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/correlation_matrix.png)
 
 # Preparação dos Dados:
 
@@ -112,14 +110,44 @@ Essas etapas asseguram a consistência e relevância dos dados para o treinament
 
 ![features_selection](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/feature%20selection.png)
 
-<br>
+# Abordagem de Treinamento do Modelo:
+   - Os dados foram divididos entre treino e teste na razão de 80% para treino e 20% para teste.
+   - O resultados dos modelos foram avaliados principalmente com base na taxa de recall, visto que não foram aplicadas técnicas específicas para lidar com o desequilíbrio de classe.
 
 # Algoritmo de Machine Learning:
-   - O algoritmo escolhido foi o XGBoost Classifier. Realizamos testes com 5 algoritmos diferentes (KNN, Logistic Regression, Extra Trees Classifier, Random Forest e XGBoost) e selecionamos o melhor modelo com base em gráficos de Cumulative Gain e Lift Curve.
+   - O algoritmo escolhido foi o XGBoost Classifier. Realizamos testes com 5 algoritmos diferentes (KNN, Logistic Regression, Extra Trees Classifier, Random Forest e XGBoost) e selecionamos o melhor modelo com base em gráficos de Cumulative Gain e Lift Curve e das taxas de precisão e recall para o top 20% dos clientes após o ranqueamento do modelo, como mostra a tabela abaixo:
 
-![Cumulative_gains_Lift_curve](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/Cumulative_gains_Lift_curve.png)
+![tabela_comparativa](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/tabela_comparativa.png)
 
-Abordagem de Treinamento do Modelo:
-   - Os dados foram divididos entre treino e teste na razão de 80% para treino e 20% para teste.
-   - Não foram aplicadas técnicas específicas para lidar com o desequilíbrio de classe.
+# Performance do modelo
+- Ao focar em **20% dos clientes** do conjunto de teste, a equipe de vendas pode alcançar uma **taxa de precisão de 35,96%** e uma **taxa de recall de 57,56%**.
+- Isso significa que, ao seguir as previsões do modelo XGBoost, os primeiros 20% dos clientes englobam 57,56% de todos aqueles interessados em contratar um novo serviço.
+- Essa abordagem **triplica a eficiência da equipe de vendas** em comparação com uma seleção aleatória, pois 35,96% dos clientes nesta amostra selecionada pelo modelo expressam interesse, ao contrário de uma amostra aleatória que teria apenas 12,19%.
+
+![Cumulative_gains_Lift_curve_validation](https://github.com/GabrielAlvesDS/Health-Insurance-Cross-Sell/blob/main/docs/Cumulative_gains_Lift_curve_validation.png)
+
+# Deploy
+O modelo foi colocado em produção conectando o Render ao repositório [health_insurance_app](https://github.com/GabrielAlvesDS/health_insurance_app ), criando uma API para que a área de Vendas consiga acessar a probabilidade de contratar o novo produto, através de uma planilha no Google Sheets.
+
+### Detalhes Técnicos da Implantação:
+O modelo foi implantado em produção utilizando o Render, um serviço de hospedagem de aplicações web. O código da aplicação está disponível no repositório [health_insurance_app](https://github.com/GabrielAlvesDS/health_insurance_app), contendo os seguintes arquivos:
+
+- **Handler.py**: Cria uma API Flask para fazer previsões com base no modelo treinado.
+- **HealthInsurance.py**: Contém a classe responsável pelo pré-processamento dos dados antes de fazer previsões com o modelo.
+- **model_health_insurance.pkl**: Modelo treinado.
+- Objetos de pré-processamento (escaladores), salvos como arquivos pickle no diretório features.
+
+### Uso da Planilha do Google Sheets - Ranking de Clientes para Seguro Residencial:
+Os usuários podem acessar as previsões do modelo por meio da planilha do Google Sheets. Para isso, eles precisam seguir estas etapas:
+
+- Abra a planilha do Google Sheets contendo a macro para solicitar as previsões do modelo ([Ranking de Clientes para Seguro Residencial](https://docs.google.com/spreadsheets/d/1d1j0Ds24v9-SMOth6H7N9dsdxhpp2RNEXOCJcJaIOv0/edit?usp=sharing)).
+- Certifique-se de que a planilha esteja no mesmo formato que está presente na versão atual.
+- Selecione toda a tabela na planilha.
+- No menu, clique em "Extensões" e selecione "Macro".
+- Execute a macro "fazerChamadaAPI".
+- Uma nova coluna será adicionada ao lado da tabela com o score de propensão para cada cliente, automaticamente reordenada de forma decrescente.
+
+
+Com essas etapas, os usuários podem facilmente acessar as previsões do modelo diretamente na planilha do Google Sheets, facilitando a identificação dos clientes mais propensos a adquirir o novo serviço de seguro residencial.
+
 
